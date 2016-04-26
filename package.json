@@ -1,0 +1,19 @@
+{
+  "name": "external--icepick",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/icepick.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "icepick": "^1.2.0",
+    "retyped-icepick-tsd-ambient": "^1.1.0-0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-envify": "^1.0.0"
+  }
+}
