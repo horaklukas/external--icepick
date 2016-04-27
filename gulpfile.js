@@ -1,5 +1,6 @@
 var gulp = require('gulp');
 var envify = require('gulp-envify');
+var replace = require('gulp-replace');
 
 var distDir = './src';
 var environment = {
@@ -12,9 +13,12 @@ gulp.task('build', function() {
     .pipe(gulp.dest(distDir));
 });
 
-gulp.task('copy:typings', function() {
+gulp.task('typings', function() {
   return gulp.src('node_modules/retyped-icepick-tsd-ambient/*.d.ts')
+    .pipe(replace('declare module "icepick" {', '')) // module declaration
+    .pipe(replace(/}\s*$/, '')) // module decalaration closing bracket
+    .pipe(replace('\n  ', '\n')) // remove indentation at line beginning
     .pipe(gulp.dest(distDir));
 });
 
-gulp.task('default', ['build', 'copy:typings'])
+gulp.task('default', ['build', 'typings'])
