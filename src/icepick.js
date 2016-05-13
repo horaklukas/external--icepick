@@ -7,10 +7,25 @@
  *
  * Inspired by clojure/mori and Immutable.js
  */
-
+ 
+(function(root, factory) { 
+  if (typeof define === 'function' && define.amd) { 
+      // AMD. Register as an anonymous module. 
+      define(factory); 
+  } else if (typeof module === 'object' && module.exports) { 
+      // Node. Does not work with strict CommonJS, but 
+      // only CommonJS-like environments that support module.exports, 
+      // like Node. 
+      module.exports = factory(); 
+  } else { 
+      // Browser globals (root is window) 
+      root.icepick = factory(); 
+  } 
+}(this, function () { 
+  
 "use strict";
 
-var i = exports;
+var i = {};
 
 // we only care about objects or arrays for now
 function weCareAbout(val) {
@@ -109,7 +124,7 @@ function baseFreeze(coll, prevNodes) {
  * @param  {Object|Array} coll
  * @return {Object|Array}
  */
-exports.freeze = function freeze(coll) {
+i.freeze = function freeze(coll) {
   if ("production" === "production") {
     return coll;
   }
@@ -121,7 +136,7 @@ exports.freeze = function freeze(coll) {
  * @param  {[type]} coll [description]
  * @return {[type]}      [description]
  */
-exports.thaw = function thaw(coll) {
+i.thaw = function thaw(coll) {
   if (weCareAbout(coll) && Object.isFrozen(coll)) {
     var newColl = clone(coll);
     Object.keys(newColl).forEach(function (key) {
@@ -139,7 +154,7 @@ exports.thaw = function thaw(coll) {
  * @param  {Object}        value
  * @return {Object|Array}        new object hierarchy with modifications
  */
-exports.assoc = function assoc(coll, key, value) {
+i.assoc = function assoc(coll, key, value) {
   if (coll[key] === value) {
     return _freeze(coll);
   }
@@ -151,7 +166,7 @@ exports.assoc = function assoc(coll, key, value) {
   return _freeze(newObj);
 
 };
-exports.set = exports.assoc;
+i.set = i.assoc;
 
 /**
  * un-set a value on an object or array
@@ -159,14 +174,14 @@ exports.set = exports.assoc;
  * @param  {String|Number} key  Key or Index
  * @return {Object|Array}       New object or array
  */
-exports.dissoc = function dissoc(coll, key) {
+i.dissoc = function dissoc(coll, key) {
   var newObj = clone(coll);
 
   delete newObj[key];
 
   return _freeze(newObj);
 };
-exports.unset = exports.dissoc;
+i.unset = i.dissoc;
 
 /**
  * set a value deep in a hierarchical structure
@@ -175,7 +190,7 @@ exports.unset = exports.dissoc;
  * @param  {Object}       value
  * @return {Object|Array}       new object hierarchy with modifications
  */
-exports.assocIn = function assocIn(coll, path, value) {
+i.assocIn = function assocIn(coll, path, value) {
   var key0 = path[0];
   if (path.length === 1) {
     // simplest case is a 1-element array.  Just a simple assoc.
@@ -186,7 +201,7 @@ exports.assocIn = function assocIn(coll, path, value) {
     return i.assoc(coll, key0, assocIn(coll[key0] || {}, path.slice(1), value));
   }
 };
-exports.setIn = exports.assocIn;
+i.setIn = i.assocIn;
 
 /**
  * get an object from a hierachy based on an array of keys
@@ -201,7 +216,7 @@ function baseGet(coll, path) {
   }, coll);
 }
 
-exports.getIn = baseGet;
+i.getIn = baseGet;
 
 /**
  * Update a value in a hierarchy
@@ -211,7 +226,7 @@ exports.getIn = baseGet;
  *                             Return the new value to set
  * @return {Object|Array}      new object hierarchy with modifications
  */
-exports.updateIn = function updateIn(coll, path, callback) {
+i.updateIn = function updateIn(coll, path, callback) {
   var existingVal = baseGet(coll, path);
   return i.assocIn(coll, path, callback(existingVal));
 };
@@ -220,7 +235,7 @@ exports.updateIn = function updateIn(coll, path, callback) {
 // generate wrappers for the mutative array methods
 ["push", "unshift", "pop", "shift", "reverse", "sort"]
 .forEach(function (methodName) {
-  exports[methodName] = function (arr, val) {
+  i[methodName] = function (arr, val) {
     var newArr = arrayClone(arr);
 
     newArr[methodName](freezeIfNeeded(val));
@@ -228,11 +243,11 @@ exports.updateIn = function updateIn(coll, path, callback) {
     return _freeze(newArr);
   };
 
-  exports[methodName].displayName = "icepick." + methodName;
+  i[methodName].displayName = "icepick." + methodName;
 });
 
 // splice is special because it is variadic
-exports.splice = function splice(arr/*, args*/) {
+i.splice = function splice(arr/*, args*/) {
   var newArr = arrayClone(arr),
     args = rest(arguments).map(freezeIfNeeded);
 
@@ -242,24 +257,24 @@ exports.splice = function splice(arr/*, args*/) {
 };
 
 // slice is non-mutative
-exports.slice = function slice(arr, arg1, arg2) {
+i.slice = function slice(arr, arg1, arg2) {
   var newArr = arr.slice(arg1, arg2);
 
   return _freeze(newArr);
 };
 
 ["map", "filter"].forEach(function (methodName) {
-  exports[methodName] = function (fn, arr) {
+  i[methodName] = function (fn, arr) {
     var newArr = arr[methodName](fn);
 
     return _freeze(newArr);
   };
 
-  exports[methodName].displayName = "icepick." + methodName;
+  i[methodName].displayName = "icepick." + methodName;
 });
 
-exports.extend =
-exports.assign = function assign(/*...objs*/) {
+i.extend =
+i.assign = function assign(/*...objs*/) {
   var newObj = rest(arguments).reduce(singleAssign, arguments[0]);
 
   return _freeze(newObj);
@@ -271,7 +286,7 @@ function singleAssign(obj1, obj2) {
   }, obj1);
 }
 
-exports.merge = merge;
+i.merge = merge;
 function merge(target, source, resolver) {
   if (target == null || source == null) {
     return target;
@@ -337,21 +352,25 @@ var chainProto = {
   }
 };
 
-Object.keys(exports).forEach(function (methodName) {
+Object.keys(i).forEach(function (methodName) {
   chainProto[methodName] = function (/*...args*/) {
     var args = _slice(arguments);
     args.unshift(this.val);
-    this.val = exports[methodName].apply(null, args);
+    this.val = i[methodName].apply(null, args);
     return this;
   };
 });
 
-exports.chain = function chain(val) {
+i.chain = function chain(val) {
   var wrapped = Object.create(chainProto);
   wrapped.val = val;
   return wrapped;
 };
 
 // for testing
-exports._weCareAbout = weCareAbout;
-exports._slice = _slice;
+i._weCareAbout = weCareAbout;
+i._slice = _slice;
+
+return i;
+
+}));
